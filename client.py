@@ -1,5 +1,8 @@
-import requests
+import threading
 import time
+
+import requests
+
 
 class QueueClient:
     def __init__(self, server_url):
@@ -26,20 +29,20 @@ class QueueClient:
         else:
             return "Failed to pop message."
 
-    def subscribe(self, f):
-        self.subscribe_func = f
-        new_client = QueueClient(self.server_url)
+    def pull_periodically(self, f):
         while True:
-            key, value = new_client.pull()
-            self.subscribe_func(key, value)
+            key, value = self.pull()
+            if key and value:
+                f(key, value)
             time.sleep(1)
 
-
+    def subscribe(self, f):
+        self.subscribe_func = f
+        thread = threading.Thread(target=self.pull_periodically(f))
+        thread.start()
 
 
 if __name__ == "__main__":
     server_url = "http://localhost:8000"
     client = QueueClient(server_url)
-
-
-
+    client.subscribe(None)
