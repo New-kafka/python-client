@@ -1,5 +1,5 @@
 import requests
-
+import time
 
 class QueueClient:
     def __init__(self, server_url):
@@ -13,8 +13,6 @@ class QueueClient:
         response = requests.post(url, json=data)
 
         if response.status_code == 200:
-            if self.subscribe_func != None:
-                self.subscribe_func(key, value)
             return "Message pushed successfully."
         else:
             return "Failed to push message."
@@ -30,6 +28,13 @@ class QueueClient:
 
     def subscribe(self, f):
         self.subscribe_func = f
+        new_client = QueueClient(self.server_url)
+        while True:
+            key, value = new_client.pull()
+            self.subscribe_func(key, value)
+            time.sleep(1)
+
+
 
 
 if __name__ == "__main__":
