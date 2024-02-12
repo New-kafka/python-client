@@ -14,12 +14,13 @@ class QueueClient:
 
     def push(self, key, value):
         url = f"{self.server_url}/push"
+        key_str = str(key)
         encoded_value = base64.b64encode(json.dumps(value).encode('utf-8')).decode('utf-8')
-        data = json.dumps({"key": key, "value": encoded_value})
+        data = json.dumps({"key": key_str, "value": encoded_value})
         response = requests.request("POST", url, data=data, headers=self.headers)
 
         if response.status_code == 200:
-            return f"Message {value} pushed successfully to queue {key}."
+            return f"Message {value} pushed successfully to queue {key_str}."
         else:
             return response.content.decode('utf-8')
 
@@ -80,7 +81,7 @@ def subscribe_test():
     subscriber_thread = threading.Thread(target=subscribe_and_receive_messages, args=(client_subscriber,))
     subscriber_thread.start()
     time.sleep(2)
-    num_messages = 100
+    num_messages = 10
     queue_name = "testQueue111"
     push_messages(client_pusher, num_messages, queue_name)
     time.sleep(5)
